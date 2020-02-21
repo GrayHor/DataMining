@@ -2,8 +2,10 @@ from pprint import pprint
 from bs4 import BeautifulSoup as bs
 import requests
 import re
-import pandas as pd
 import json
+from Lesson_3_HW.db_Mongo import db_save
+from Lesson_3_HW.db_Mongo import find_wish_salary
+from Lesson_3_HW.db_Mongo import update_vacancies
 
 #Запрашиваем вакансию
 
@@ -38,7 +40,6 @@ def parse_hh(search_vacancy, finish_page):
 
         vacancy_block = html.find('div', {'class': 'vacancy-serp'})
         vacancy_list = vacancy_block.findAll('div', {'class':'vacancy-serp-item'})
-
 
 
         for vacancy in vacancy_list:
@@ -82,9 +83,6 @@ def parse_hh(search_vacancy, finish_page):
             vacancies.append(vacancy_data)
     return vacancies
 result_hh = parse_hh(search_vacancy, finish_page)
-
-#Последняя страница sj
-
 
 start_url_sj = 'https://www.superjob.ru/vacancy/search/?geo%5Bc%5D%5B0%5D=1'
 params = {'keywords': search_vacancy}
@@ -145,11 +143,16 @@ def parse_sj(search_vacancy, finish_page, vacancies):
     return vacancies
 
 result = parse_sj(search_vacancy, finish_page, result_hh)
-print(len(result))
 data_json = json.dumps(result)
-pd.set_option('display.max_columns', None)
-data = pd.read_json(data_json)
-df = pd.DataFrame(data)
+data = json.loads(data_json)
+pprint(data)
 
-print(df.head())
-print(df.tail())
+#Сохранение в БД Mongo
+# db_save(data)
+
+#Поиск и печать вакансий с желаемой зп
+find_wish_salary(30000)
+#
+# #Добавление новых
+for obj in data:
+    update_vacancies(obj)
